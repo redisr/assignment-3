@@ -4,46 +4,57 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
 from wordcloud import WordCloud
+from utils import get_texts_by_year, get_years
 
 dataset = pd.read_csv('news_headlines/news_headlines.csv')
 X = dataset.iloc[1:, :].values
 
 # TODO split data by year
+years = get_years(X[:, 0])
+for i in years:
+    print (i)
+    data = get_texts_by_year(X, i)
 
-# vectorize the sentences to ngram
-vectorizer = CountVectorizer(analyzer='word', ngram_range=(2, 3))
-tokens = vectorizer.fit_transform(X[:, 1])
+    # vectorize the sentences to ngram
+    vectorizer = CountVectorizer(analyzer='word', ngram_range=(1, 2))
+    tokens = vectorizer.fit_transform(data[:, 1])
+    
+    # Run this and go watch some netflix, get some sleep, and check it tomorrow
+    wcss = []
+    for clusters in range(2,20):
+        print (clusters)
+        kmeans = KMeans(n_clusters = clusters, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0, n_jobs=3)
+        kmeans.fit(tokens)
+        wcss.append(kmeans.inertia_)
 
-# Run this and go watch some netflix, get some sleep, and check it tomorrow
-wcss = []
-for i in range(2,28):
-    kmeans = KMeans(n_clusters = i, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0, n_jobs=-1)
+    # plot cost function
+    plt.plot(range(2, 20), wcss)
+    plt.savefig("graphs/cost-" + str(i) + "(1, 2)")
+    plt.show()
+    n_clusters = input()
+
+    # Find clusters
+    kmeans = KMeans(n_clusters=int(n_clusters), init='k-means++', max_iter=300, n_init=10, random_state=0, n_jobs=3)
     kmeans.fit(tokens)
-    wcss.append(kmeans.inertia_)
+    y_kmeans = kmeans.fit_predict(tokens)
+
+    sorted_indexes = np.argsort(y_kmeans)
+    texts = dict()
+
+    # separate clusters
+    clusters = dict()
+    for indexes in sorted_indexes:
+        if not(y_kmeans[indexes] in clusters):
+            print (y_kmeans[indexes])
+            clusters[y_kmeans[indexes]] = []
+        clusters[y_kmeans[indexes]].append(indexes)
 
 
-# Find clusters
-kmeans = KMeans(n_clusters=21, init='k-means++', max_iter=300, n_init=10, random_state=0, n_jobs=-1)
-kmeans.fit(tokens)
-y_kmeans = kmeans.fit_predict(tokens)
-
-sorted_indexes = np.argsort(y_kmeans)
-texts = dict()
-
-# separate clusters
-cluster = dict()
-for i in sorted_indexes:
-    if not(y_kmeans[i] in cluster):
-        print (y_kmeans[i])
-        cluster[y_kmeans[i]] = []
-    cluster[y_kmeans[i]].append(i)
-
-
-# make word clouds out of each cluster
-wordclouds = []
-for i in cluster:
-    wordclouds.append(WordCloud().generate(" ".join(X[cluster[i], 1])))
-
-plt.imshow(wordclouds[0], interpolation='bilinear')
-plt.axis("off")
-plt.show()
+    # make word clouds out of each cluster
+    wordclouds = []
+    for idx in clusters:
+        wordclouds.append(WordCloud().generate(" ".join(X[clusters[idx], 1])))
+        plt.imshow(wordclouds[idx], interpolation='bilinear')
+        plt.axis("off")
+        plt.savefig("graphs/wordcloud-(1,2) " + str(i) + "-" + str(idx))
+        plt.show()
