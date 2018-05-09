@@ -71,29 +71,30 @@ def get_sentences(X):
 
 ############################################################################################################
 
-nltk.download()
-tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+if __name__ == '__main__':
+    nltk.download()
+    tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 
-dataset = pd.read_csv('news_headlines/news_headlines.csv')
-X = dataset.iloc[1:, :].values
+    dataset = pd.read_csv('news_headlines/news_headlines.csv')
+    X = dataset.iloc[1:, :].values
 
-print("Parsing sentences...")
-sentences = get_sentences(X)
+    print("Parsing sentences...")
+    sentences = get_sentences(X)
 
-#Train word2vec model
-print("Training Word2Vec model")
-model = word2vec.Word2Vec(sentences, workers = 4, size = 200, min_count = 30, window = 10, sample = 0.001)
+    #Train word2vec model
+    print("Training Word2Vec model")
+    model = word2vec.Word2Vec(sentences, workers = 4, size = 200, min_count = 30, window = 10, sample = 0.001)
 
-#Get Inputs to train K-means
-word_vectors = model.wv.syn0
+    #Get Inputs to train K-means
+    word_vectors = model.wv.syn0
 
-for n_clusters in range(3,20):
-    print("Training K-Means for n_clusters = " + str(n_clusters))
-    kmeans = KMeans(n_clusters=int(n_clusters), init='k-means++', max_iter=300, n_init=10, random_state=0, n_jobs=-1)
-    cluster_labels = kmeans.fit_predict(word_vectors)
+    for n_clusters in range(3,20):
+        print("Training K-Means for n_clusters = " + str(n_clusters))
+        kmeans = KMeans(n_clusters=int(n_clusters), init='k-means++', max_iter=300, n_init=10, random_state=0, n_jobs=-1)
+        cluster_labels = kmeans.fit_predict(word_vectors)
 
-    silhouette_avg = silhouette_score(word_vectors, cluster_labels)
+        silhouette_avg = silhouette_score(word_vectors, cluster_labels, sample_size=1000)
 
-    #High silhouette values mean that the clusters are well separated.
-    print("For n_clusters =", n_clusters,
-          "The average silhouette_score is :", silhouette_avg)
+        #High silhouette values mean that the clusters are well separated.
+        print("For n_clusters =", n_clusters,
+              "The average silhouette_score is :", silhouette_avg)
