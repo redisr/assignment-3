@@ -33,5 +33,5 @@ def lemmatize_text(wlen, text):
 def lemmatize_data(texts):
     wlem = WordNetLemmatizer()
     for i in range(len(texts)):
-        texts[i] = lemmatize_text(wlem, texts[i])
+        texts[i] = lemmatize_text(wlem, texts[i, 1])
     return texts

@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     #Train word2vec model
     print("Training Word2Vec model")
-    model = word2vec.Word2Vec(sentences, workers = 4, size = 200, min_count = 30, window = 10, sample = 0.001)
+    model = word2vec.Word2Vec(sentences, workers = 4, size = 100, min_count = 30, window = 10, sample = 0.001)
 
     #Get Inputs to train K-means
     word_vectors = model.wv.syn0
