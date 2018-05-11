@@ -63,11 +63,38 @@ def headline_to_sentence(headline, remove_stopwords=False):
 
 def get_sentences(X):
     sentences = []
-    for iter in range(X.shape[0]):
+    # for iter in range(X.shape[0]):
+    for iter in range(10000):
+    # for iter in range(10):
         sentences += headline_to_sentence(X[iter][1])
 
     return sentences
 
+# def pattern2vector(tokens, word2vec, AVG=False):
+#     pattern_vector = np.zeros(word2vec.layer1_size)
+#     n_words = 0
+#     if len(tokens) > 1:
+#         for t in tokens:
+#             try:
+#                 vector = word2vec[t.strip()]
+#                 pattern_vector = np.add(pattern_vector,vector)
+#                 n_words += 1
+#             except KeyError, e:
+#                 continue
+#         if AVG is True:
+#             pattern_vector = np.divide(pattern_vector,n_words)
+#     elif len(tokens) == 1:
+#         try:
+#             pattern_vector = word2vec[tokens[0].strip()]
+#         except KeyError:
+#             pass
+#     return pattern_vector
+
+
+def document_vector(word2vec_model, doc):
+    # remove out-of-vocabulary words
+    doc = [word for word in doc if word in word2vec_model.wv.vocab]
+    return np.mean(word2vec_model[doc], axis=0)
 
 ############################################################################################################
 
@@ -82,19 +109,26 @@ if __name__ == '__main__':
     sentences = get_sentences(X)
 
     #Train word2vec model
-    print("Training Word2Vec model")
-    model = word2vec.Word2Vec(sentences, workers = 4, size = 100, min_count = 30, window = 10, sample = 0.001)
+    print("Training Word2Vec model...")
+    model = word2vec.Word2Vec(sentences, workers = 4, size = 1000, min_count = 30, window = 10, sample = 0.001)
 
-    #Get Inputs to train K-means
-    word_vectors = model.wv.syn0
+    print("Getting average vector for each sentence...")
+    # word_vectors = []
+    # for sentence in sentences:
+    #     word_vectors.append(document_vector(model, sentence))
+    #
+    # print(len(word_vectors))
 
-    for n_clusters in range(3,20):
-        print("Training K-Means for n_clusters = " + str(n_clusters))
-        kmeans = KMeans(n_clusters=int(n_clusters), init='k-means++', max_iter=300, n_init=10, random_state=0, n_jobs=-1)
-        cluster_labels = kmeans.fit_predict(word_vectors)
+    # #Get Inputs to train K-means
+    # word_vectors = model.wv.syn0
 
-        silhouette_avg = silhouette_score(word_vectors, cluster_labels, sample_size=1000)
-
-        #High silhouette values mean that the clusters are well separated.
-        print("For n_clusters =", n_clusters,
-              "The average silhouette_score is :", silhouette_avg)
+    # for n_clusters in range(3,20):
+    #     print("Training K-Means for n_clusters = " + str(n_clusters))
+    #     kmeans = KMeans(n_clusters=int(n_clusters), init='k-means++', max_iter=300, n_init=10, random_state=0, n_jobs=-1)
+    #     cluster_labels = kmeans.fit_predict(word_vectors)
+    #
+    #     silhouette_avg = silhouette_score(word_vectors, cluster_labels, sample_size=1000)
+    #
+    #     #High silhouette values mean that the clusters are well separated.
+    #     print("For n_clusters =", n_clusters,
+    #           "The average silhouette_score is :", silhouette_avg)
