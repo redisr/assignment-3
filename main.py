@@ -45,10 +45,11 @@ if __name__ == '__main__':
     # input()
     # vectorize the sentences to ngram (2-grams and 3-grams)
     print("Vectorize data")
-    vectorizer = TfidfVectorizer(analyzer='word', ngram_range=(3, 3), max_features=20)
+    vectorizer = TfidfVectorizer(analyzer='word', ngram_range=(2, 2), max_features=40)
 
     #Uncomment this to run with just one year
     tokens = vectorizer.fit_transform(data[:, 1])
+    print (vectorizer.get_feature_names())
 
     #Uncomment this to run with the full dataset
     # tokens = vectorizer.fit_transform(data)
@@ -56,21 +57,20 @@ if __name__ == '__main__':
     # Run this and go watch some netflix, get some sleep, and check it tomorrow
     wcss = []
     print("K-Means time")
-    for clusters in range(3,40):
+    for clusters in range(3,50):
         print (clusters)
-        kmeans = KMeans(n_clusters = clusters, init = 'k-means++', max_iter = 400, n_init = 10, random_state = 0, n_jobs=-1)
+        kmeans = KMeans(n_clusters = clusters, init = 'k-means++', max_iter = 1000, n_init = 10, random_state = 0, n_jobs=-1)
         y_labels = kmeans.fit_predict(tokens)
         silhouette_avg = silhouette_score(tokens, y_labels, sample_size=5000)
-
         #High silhouette values mean that the clusters are well separated.
         print("For n_clusters =", clusters,
-              "The average silhouette_score is :", silhouette_avg)
+                "The average silhouette_score is :", silhouette_avg)
         wcss.append(kmeans.inertia_)
 
 
     # plot cost function
-    plt.plot(range(3, 40), wcss)
-    plt.savefig("graphs/cost")
+    plt.plot(range(3, 50), wcss)
+    #plt.savefig("graphs/cost")
     plt.show()
 
     n_clusters = input()
